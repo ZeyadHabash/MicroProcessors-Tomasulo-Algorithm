@@ -14,6 +14,9 @@ public class Register {
     }
 
     public void setLabel(String label) {
+        if (label.equals("R0")) {
+            return;
+        }
         this.label = label;
     }
 
