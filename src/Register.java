@@ -13,13 +13,6 @@ public class Register {
         return label;
     }
 
-    public void setLabel(String label) {
-        if (label.equals("R0")) {
-            return;
-        }
-        this.label = label;
-    }
-
     public String getQi() {
         return Qi;
     }
@@ -33,6 +26,8 @@ public class Register {
     }
 
     public void setValue(float value) {
+        if (this.label.equals("R0"))
+            return;
         this.value = value;
     }
 }
