@@ -2,8 +2,8 @@ public class ReservationStationRow {
     private String tag;
     boolean busy;
     private String operation;
-    private float Vj;
-    private float Vk;
+    private double Vj;
+    private double Vk;
     private String Qj;
     private String Qk;
     private int A; // Address to load/store
@@ -45,19 +45,19 @@ public class ReservationStationRow {
         this.operation = operation;
     }
 
-    public float getVj() {
+    public double getVj() {
         return Vj;
     }
 
-    public void setVj(float vj) {
+    public void setVj(double vj) {
         Vj = vj;
     }
 
-    public float getVk() {
+    public double getVk() {
         return Vk;
     }
 
-    public void setVk(float vk) {
+    public void setVk(double vk) {
         Vk = vk;
     }
 
@@ -88,8 +88,13 @@ public class ReservationStationRow {
     public int getUseCount() {
         return useCount;
     }
-
+    public void setUseCount(int useCount) {
+        this.useCount = useCount;
+    }
     public void incrementUseCount() {
         this.useCount++;
+    }
+    public void decrementUseCount() {
+        this.useCount--;
     }
 }
