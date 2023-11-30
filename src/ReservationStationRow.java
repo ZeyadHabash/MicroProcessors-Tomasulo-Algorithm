@@ -1,7 +1,7 @@
 public class ReservationStationRow {
     private String tag;
     boolean busy;
-    private Operations operation;
+    private String operation;
     private float Vj;
     private float Vk;
     private String Qj;
@@ -37,11 +37,11 @@ public class ReservationStationRow {
         this.busy = busy;
     }
 
-    public Operations getOperation() {
+    public String getOperation() {
         return operation;
     }
 
-    public void setOperation(Operations operation) {
+    public void setOperation(String operation) {
         this.operation = operation;
     }
 
