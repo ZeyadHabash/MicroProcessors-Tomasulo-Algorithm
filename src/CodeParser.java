@@ -28,8 +28,8 @@ public class CodeParser {
                     instruction = new Instruction(tokens[hasLabel], destination, immediateValue);
                     hasLabel = 0;
                 } else if (tokens[hasLabel].equals("S.D")) {
-                    double immediateValue = Double.parseDouble(tokens[hasLabel + 1]);
-                    Register operand1 = RegisterFile.getRegister(tokens[hasLabel + 2]);
+                    Register operand1 = RegisterFile.getRegister(tokens[hasLabel + 1]);
+                    double immediateValue = Double.parseDouble(tokens[hasLabel + 2]);
                     instruction = new Instruction(tokens[hasLabel], immediateValue, operand1);
                     hasLabel = 0;
                 } else if (tokens[hasLabel].equals("ADDI") || tokens[hasLabel].equals("SUBI")) {
@@ -39,7 +39,7 @@ public class CodeParser {
                     instruction = new Instruction(tokens[hasLabel], destination, operand1, immediateValue);
                     hasLabel = 0;
                 } else if (tokens[hasLabel].equals("BNEZ")) {
-                    Register destination = RegisterFile.getRegister(tokens[hasLabel + 1]);
+                    Register operand1 = RegisterFile.getRegister(tokens[hasLabel + 1]);
                     AtomicReference<Integer> immediateValue = new AtomicReference<>(0);
                     int finalHasLabel = hasLabel;
                     Labels.forEach((key, value) -> {
@@ -47,7 +47,7 @@ public class CodeParser {
                             immediateValue.set(value);
                         }
                     });
-                    instruction = new Instruction(tokens[hasLabel], destination, immediateValue.get());
+                    instruction = new Instruction(tokens[hasLabel], immediateValue.get(), operand1);
                     hasLabel = 0;
                 } else {
                     // if we have a label add it to the map and stay in this line

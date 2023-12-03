@@ -10,10 +10,10 @@ public class Instruction {
     private Register operand1; // j, if using registers for operands
     private Register operand2; // k, if using registers for operands
     private double immediateValue; // if using immediate value for operand or Address for load/store
-    private double issue;
-    private double executionStart;
-    private double executionEnd;
-    private double writeResult;
+    private int issue;
+    private int executionStart;
+    private int executionEnd;
+    private int writeResult;
 
     // Constructor for ADD.D, SUB.D, MUL.D, DIV.D, DADD, DSUB
     public Instruction(String operation, Register destination, Register operand1, Register operand2) {
@@ -27,7 +27,7 @@ public class Instruction {
         this.writeResult = -1;
     }
 
-    // Constructor for L.D and BNEZ
+    // Constructor for L.D
     public Instruction(String operation, Register destination, double immediateValue) {
         this.operation = operation;
         this.destination = destination; // destination register if L.D, source register if BNEZ
@@ -38,7 +38,7 @@ public class Instruction {
         this.writeResult = -1;
     }
 
-    // Constructor for S.D
+    // Constructor for S.D and BNEZ
     public Instruction(String operation, double immediateValue, Register operand1) {
         this.operation = operation;
         this.immediateValue = immediateValue; // address
@@ -103,35 +103,62 @@ public class Instruction {
         this.immediateValue = immediateValue;
     }
 
-    public double getIssue() {
+    public int getIssue() {
         return issue;
     }
 
-    public void setIssue(double issue) {
+    public void setIssue(int issue) {
         this.issue = issue;
     }
 
-    public double getExecutionStart() {
+    public int getExecutionStart() {
         return executionStart;
     }
 
-    public void setExecutionStart(double executionStart) {
+    public void setExecutionStart(int executionStart) {
         this.executionStart = executionStart;
     }
 
-    public double getExecutionEnd() {
+    public int getExecutionEnd() {
         return executionEnd;
     }
 
-    public void setExecutionEnd(double executionEnd) {
+    public void setExecutionEnd(int executionEnd) {
         this.executionEnd = executionEnd;
     }
 
-    public double getWriteResult() {
+    public int getWriteResult() {
         return writeResult;
     }
 
-    public void setWriteResult(double writeResult) {
+    public void setWriteResult(int writeResult) {
         this.writeResult = writeResult;
+    }
+
+    public String toString() {
+        String res = "";
+        res += this.operation + "\t";
+        if (this.destination != null) {
+            res += this.destination.getLabel() + "\t";
+        }
+        else if (this.operation.equals("BNEZ")) {
+            res += this.immediateValue + "\t";
+        }
+
+        if (this.operation.equals("L.D")  || this.operation.equals("BNEZ")) {
+            res += 0 + "\t";
+        }
+        if (this.operand1 != null) {
+            res += this.operand1.getLabel() + "\t";
+        }
+        if (this.operation.equals("S.D"))
+            res += 0 + "\t";
+        if (this.operand2 != null) {
+            res += this.operand2.getLabel() + "\t";
+        }
+        if (this.operation.equals("L.D") || this.operation.equals("S.D") || this.operation.equals("ADDI") || this.operation.equals("SUBI")) {
+            res += this.immediateValue;
+        }
+        return res;
     }
 }

@@ -7,11 +7,11 @@ public class InstructionQueue {
         this.instructions = new ArrayList<Instruction>();
     }
 
-    public void addInstruction(Instruction instruction) {
+    public void add(Instruction instruction) {
         this.instructions.add(instruction);
     }
 
-    public Instruction getInstruction(int index) {
+    public Instruction get(int index) {
         return this.instructions.get(index);
     }
 
@@ -19,11 +19,12 @@ public class InstructionQueue {
         return this.instructions.size();
     }
 
-    public String toString() {
-        String result = "";
+
+    public void print() {
+        System.out.println("Instruction Queue:");
+        System.out.println("Operation\tDestination\tj\tk\tIssue\tExecution\t\tWrite Result");
         for (Instruction instruction : this.instructions) {
-            result += instruction.toString() + "\n";
-        }
-        return result;
+            System.out.println(instruction.toString());
+        };
     }
 }

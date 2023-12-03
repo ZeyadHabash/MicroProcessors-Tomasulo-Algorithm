@@ -19,4 +19,12 @@ public class RegisterFile {
         }
         return null;
     }
+
+    public static void printRegisterFile() {
+        System.out.println("Register File:");
+        System.out.println("Register\tQi\tValue");
+        for (int i = 0; i < registerFile.length; i++) {
+            System.out.println(registerFile[i].toString());
+        }
+    }
 }

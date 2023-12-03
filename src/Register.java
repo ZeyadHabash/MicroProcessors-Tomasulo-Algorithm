@@ -30,4 +30,17 @@ public class Register {
             return;
         this.value = value;
     }
+
+    public boolean isReady() {
+        return this.Qi.equals("0");
+    }
+
+    public void reset() {
+        this.Qi = "0";
+    }
+
+    public String toString(){
+        return this.label + "\t" + this.Qi + "\t" + this.value;
+    }
+
 }

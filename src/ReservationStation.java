@@ -1,8 +1,10 @@
 public class ReservationStation {
+    String name;
     int size;
     ReservationStationRow[] rows;
 
-    public ReservationStation(int size, String tag) {
+    public ReservationStation(String name, int size, String tag) {
+        this.name = name;
         this.size = size;
         this.rows = new ReservationStationRow[size];
         for (int i = 0; i < size; i++) {
@@ -29,9 +31,21 @@ public class ReservationStation {
                 rows[i].setQj(Qj);
                 rows[i].setQk(Qk);
                 rows[i].setA(A);
-                rows[i].incrementUseCount(); // TODO: decrement usecount when writing to register
+                rows[i].incrementUseCount();
                 return;
             }
+        }
+    }
+
+    public void print() {
+        if (name.equals("load")) {
+            System.out.println("Tag\tBusy\tAddress");
+        } else if (name.equals("store")) {
+            System.out.println("Tag\tBusy\tV\tQ\tA");
+        } else
+            System.out.println("Tag\tBusy\tOp\tVj\tVk\tQj\tQk\tA");
+        for (int i = 0; i < size; i++) {
+            System.out.println(rows[i].toString());
         }
     }
 }
