@@ -9,6 +9,8 @@ public class ReservationStationRow {
     private int A; // Address to load/store
     private int useCount; // counts how many other instructions are waiting on this result (used to determine write back priority)
 
+    private Double result; // result of the instruction (used for write back)
+
     public ReservationStationRow(String tag) {
         this.tag = tag; // if add then A[num], if mul then M1, if load then L1, if store then S1, etc.
         this.busy = false;
@@ -19,6 +21,7 @@ public class ReservationStationRow {
         this.Qk = "";
         this.A = 0;
         this.useCount = 0;
+        this.result = null;
     }
 
     public String getTag() {
@@ -99,6 +102,18 @@ public class ReservationStationRow {
 
     public void decrementUseCount() {
         this.useCount--;
+    }
+
+    public Double getResult() {
+        return result;
+    }
+
+    public void setResult(Double result) {
+        this.result = result;
+    }
+
+    public boolean isReadyToExecute() {
+        return (this.Qj.equals("") && this.Qk.equals(""));
     }
 
     public String toString() {

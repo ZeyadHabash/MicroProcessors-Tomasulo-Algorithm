@@ -70,6 +70,7 @@ public class Tomasulo {
     }
 
     public void run() {
+        // TODO: change later to handle stalls and branches
         while (pc < program.size()){ // Update the current cycle number
             currentCycle++;
 
@@ -89,6 +90,7 @@ public class Tomasulo {
             print();
 
             // increment program counter
+            // TODO: change later to handle stalls and branches
             pc++;
         }
     }
@@ -210,7 +212,82 @@ public class Tomasulo {
     }
 
     public void execute() {
+        // check if any instruction is ready to execute
+        // if so, execute
+        // if not, return
 
+        // loop through reservation stations and check if any are ready to execute
+        // TODO: check priorities to know which to execute first in each reservation station
+        for (int i = 0; i < addStationSize; i++) {
+            if (addReservationStation.rows[i].isReadyToExecute()) {
+                execute(addReservationStation.rows[i]);
+            }
+        }
+        for (int i = 0; i < mulStationSize; i++) {
+            if (mulReservationStation.rows[i].isReadyToExecute()) {
+                execute(mulReservationStation.rows[i]);
+            }
+        }
+        for (int i = 0; i < loadBufferSize; i++) {
+            if (loadBuffer.rows[i].isReadyToExecute()) {
+                execute(loadBuffer.rows[i]);
+            }
+        }
+        for (int i = 0; i < storeBufferSize; i++) {
+            if (storeBuffer.rows[i].isReadyToExecute()) {
+                execute(storeBuffer.rows[i]);
+            }
+        }
+
+
+
+//        // check if reservation station is ready to write result
+//        // if not, return
+//        if (!isReadyToWriteResult(tag)) {
+//            return;
+//        }
+//
+//        // check if reservation station is ready to write result
+//        // if not, return
+//        if (!isReadyToWriteResult(tag)) {
+//            return;
+//        }
+//
+//        // check if reservation station is ready to write result
+//        // if not, return
+//        if (!isReadyToWriteResult(tag)) {
+//            return;
+//        }
+//
+//        // check if reservation station is ready to write result
+//        // if not, return
+//        if (!isReadyToWriteResult(tag)) {
+//            return;
+//        }
+//
+//        // check if reservation station is ready to write result
+//        // if not, return
+//        if (!isReadyToWriteResult(tag)) {
+//            return;
+//        }
+//
+//        // check if reservation station is ready to write result
+//        // if not, return
+//        if (!isReadyToWriteResult(tag)) {
+//            return;
+//        }
+//
+//        // check if reservation station is ready to write result
+//        // if not, return
+//        if (!isReadyToWriteResult(tag)) {
+//            return;
+//        }
+//
+//        // check if reservation station is ready to write result
+//        // if not, return
+//        if (!isReadyToWriteResult(tag)) {
+//            return;
+//        }
     }
 
     public void writeResult() {
@@ -272,6 +349,46 @@ public class Tomasulo {
                     storeBuffer.rows[i].incrementUseCount();
                 }
             }
+        }
+    }
+
+
+    public void execute(ReservationStationRow row){
+        // check the operation of the instruction
+        String operation = row.getOperation();
+        Double Vj = row.getVj();
+        Double Vk = row.getVk();
+        // add the execute cycle to the instruction
+        switch (operation) {
+            case "ADD.D":
+            case "DADD":
+            row.setResult(Vj + Vk);
+                break;
+            case "SUB.D":
+            case "DSUB":
+            row.setResult(Vj - Vk);
+                break;
+            case "MUL.D":
+                row.setResult(Vj * Vk);
+                break;
+            case "DIV.D":
+                row.setResult(Vj / Vk);
+                break;
+            case "L.D":
+                row.setResult(cache[row.getA()]);
+                break;
+            case "S.D":
+
+                break;
+            case "ADDI":
+
+                break;
+            case "SUBI":
+
+                break;
+            case "BNEZ":
+
+                break;
         }
     }
 
