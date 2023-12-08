@@ -1,14 +1,14 @@
 import java.util.ArrayList;
 
 public class Tomasulo {
+    // make Tomasulo a singleton
+    private static Tomasulo instance = null;
     // Latencies of Integer Operations
     final int ADDILatency = 1;
     final int BNEZLatency = 1;
-
     int currentCycle = 0; // Current clock cycle number
     int pc = 0; // Program counter
     double[] cache = new double[1024]; // Cache memory
-
     RegisterFile registerFile; // Register file
     ReservationStation addReservationStation;
     ReservationStation mulReservationStation;
@@ -17,13 +17,11 @@ public class Tomasulo {
     InstructionQueue instructionQueue;
     ArrayList<Instruction> program; // Program instructions
     String fileName = "input.txt"; // Input file name
-
     // Sizes of the reservation stations and buffers
     int addStationSize = 3;
     int mulStationSize = 2;
     int loadBufferSize = 3;
     int storeBufferSize = 3;
-
     // Latencies of FP Operations
     int addLatency = 2;
     int subLatency = 4;
@@ -34,6 +32,17 @@ public class Tomasulo {
     int SUBILatency = 1;
     int DADDLatency = 1;
     int DSUBLatency = 1;
+
+    private Tomasulo() {
+        // Exists only to defeat instantiation.
+    }
+
+    public static Tomasulo getInstance() {
+        if (instance == null) {
+            instance = new Tomasulo();
+        }
+        return instance;
+    }
 
     public void init() {
         // TODO: Initialize latencies through user input
@@ -93,6 +102,8 @@ public class Tomasulo {
         String Qk = "";
         int address = 0;
 
+        String tag = "";
+
         // check if reservation station is full
         // issue to reservation station
         if (operation.equals("L.D")) {
@@ -102,7 +113,7 @@ public class Tomasulo {
 
             address = (int) immediateValue;
 
-            loadBuffer.issueInstruction(operation, Vj, Vk, Qj, Qk, address);
+            tag = loadBuffer.issueInstruction(operation, Vj, Vk, Qj, Qk, address);
         } else if (operation.equals("S.D")) {
             if (storeBuffer.isFull()) {
                 return;
@@ -118,7 +129,7 @@ public class Tomasulo {
             }
             address = (int) immediateValue;
 
-            storeBuffer.issueInstruction(operation, Vj, Vk, Qj, Qk, address);
+            tag = storeBuffer.issueInstruction(operation, Vj, Vk, Qj, Qk, address);
         } else if (operation.equals("MUL.D") || operation.equals("DIV.D")) {
             if (mulReservationStation.isFull()) {
                 return;
@@ -142,7 +153,7 @@ public class Tomasulo {
                 Qk = op2.getQi();
             }
 
-            mulReservationStation.issueInstruction(operation, Vj, Vk, Qj, Qk, address);
+            tag = mulReservationStation.issueInstruction(operation, Vj, Vk, Qj, Qk, address);
         } else {
             if (addReservationStation.isFull()) {
                 return;
@@ -171,19 +182,24 @@ public class Tomasulo {
                 }
             }
 
-            addReservationStation.issueInstruction(operation, Vj, Vk, Qj, Qk, address);
+            tag = addReservationStation.issueInstruction(operation, Vj, Vk, Qj, Qk, address);
         }
         // put in instruction queue and set issue cycle
         instruction.setIssue(currentCycle);
         instructionQueue.add(instruction);
 
-
         // set Qi of destination register to tag of reservation station row
-        // decrement use count if there was another tag in Qi
-
+        if (!(operation.equals("S.D") || operation.equals("BNEZ"))) {
+            destination.setQi(tag);
+        }
 
         // increment use count of any reservation station row that this instruction is waiting on
-
+        if (!Qj.equals("")) {
+            incrementUseCount(Qj);
+        }
+        if (!Qk.equals("")) {
+            incrementUseCount(Qk);
+        }
     }
 
     public void execute() {
@@ -194,12 +210,71 @@ public class Tomasulo {
 
     }
 
+
+    // Helper functions
+
+    public void decrementUseCount(String tag) {
+        if (tag.charAt(0) == 'A') {
+            for (int i = 0; i < addStationSize; i++) {
+                if (addReservationStation.rows[i].getTag().equals(tag)) {
+                    addReservationStation.rows[i].decrementUseCount();
+                }
+            }
+        } else if (tag.charAt(0) == 'M') {
+            for (int i = 0; i < mulStationSize; i++) {
+                if (mulReservationStation.rows[i].getTag().equals(tag)) {
+                    mulReservationStation.rows[i].decrementUseCount();
+                }
+            }
+        } else if (tag.charAt(0) == 'L') {
+            for (int i = 0; i < loadBufferSize; i++) {
+                if (loadBuffer.rows[i].getTag().equals(tag)) {
+                    loadBuffer.rows[i].decrementUseCount();
+                }
+            }
+        } else if (tag.charAt(0) == 'S') {
+            for (int i = 0; i < storeBufferSize; i++) {
+                if (storeBuffer.rows[i].getTag().equals(tag)) {
+                    storeBuffer.rows[i].decrementUseCount();
+                }
+            }
+        }
+    }
+    public void incrementUseCount(String tag) {
+        if (tag.charAt(0) == 'A') {
+            for (int i = 0; i < addStationSize; i++) {
+                if (addReservationStation.rows[i].getTag().equals(tag)) {
+                    addReservationStation.rows[i].incrementUseCount();
+                }
+            }
+        } else if (tag.charAt(0) == 'M') {
+            for (int i = 0; i < mulStationSize; i++) {
+                if (mulReservationStation.rows[i].getTag().equals(tag)) {
+                    mulReservationStation.rows[i].incrementUseCount();
+                }
+            }
+        } else if (tag.charAt(0) == 'L') {
+            for (int i = 0; i < loadBufferSize; i++) {
+                if (loadBuffer.rows[i].getTag().equals(tag)) {
+                    loadBuffer.rows[i].incrementUseCount();
+                }
+            }
+        } else if (tag.charAt(0) == 'S') {
+            for (int i = 0; i < storeBufferSize; i++) {
+                if (storeBuffer.rows[i].getTag().equals(tag)) {
+                    storeBuffer.rows[i].incrementUseCount();
+                }
+            }
+        }
+    }
+
+    // Print functions
     public void print() {
         System.out.println("Program: ");
         printProgram();
         System.out.println("Cycle: " + currentCycle);
         System.out.println("PC: " + pc);
-//        RegisterFile.printRegisterFile();
+        RegisterFile.printRegisterFile();
         System.out.println("Reservation Stations:");
         System.out.println("Add Reservation Station:");
         addReservationStation.print();
@@ -213,10 +288,10 @@ public class Tomasulo {
         System.out.println();
     }
 
-    public void printProgram(){
+    public void printProgram() {
         System.out.println("{");
-        for (int i = 0; i < program.size(); i++){
-            System.out.println( i + ": " + program.get(i));
+        for (int i = 0; i < program.size(); i++) {
+            System.out.println(i + ": " + program.get(i));
         }
         System.out.println("}");
     }

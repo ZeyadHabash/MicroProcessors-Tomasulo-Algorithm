@@ -18,6 +18,11 @@ public class Register {
     }
 
     public void setQi(String qi) {
+        // if there was already a tag in Qi then decrement the use count of that reservation station row
+        if (!this.isReady()) {
+            Tomasulo tomasulo = Tomasulo.getInstance();
+            tomasulo.decrementUseCount(this.Qi);
+        }
         Qi = qi;
     }
 

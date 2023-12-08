@@ -21,7 +21,7 @@ public class ReservationStation {
         return true;
     }
 
-    public void issueInstruction(String operation, double Vj, double Vk, String Qj, String Qk, int A) {
+    public String issueInstruction(String operation, double Vj, double Vk, String Qj, String Qk, int A) {
         for (int i = 0; i < size; i++) {
             if (!rows[i].isBusy()) {
                 rows[i].setBusy(true);
@@ -31,10 +31,13 @@ public class ReservationStation {
                 rows[i].setQj(Qj);
                 rows[i].setQk(Qk);
                 rows[i].setA(A);
-                rows[i].incrementUseCount();
-                return;
+                // increment the use count if instruction has a destination register
+                if (!(operation.equals("S.D") || operation.equals("BNEZ")))
+                    rows[i].incrementUseCount();
+                return rows[i].getTag();
             }
         }
+        return "";
     }
 
     public void print() {
