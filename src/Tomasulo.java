@@ -70,23 +70,27 @@ public class Tomasulo {
     }
 
     public void run() {
-        // Update the current cycle number
-        currentCycle++;
+        while (pc < program.size()){ // Update the current cycle number
+            currentCycle++;
 
-        // get instruction from program
-        Instruction instruction = program.get(pc);
+            // get instruction from program
+            Instruction instruction = program.get(pc);
 
-        // issue
-        issue(instruction);
+            // issue
+            issue(instruction);
 
-        // Execute
-        execute();
+            // Execute
+            execute();
 
-        // Write result
-        writeResult();
+            // Write result
+            writeResult();
 
-        // print
-        print();
+            // print
+            print();
+
+            // increment program counter
+            pc++;
+        }
     }
 
     public void issue(Instruction instruction) {
@@ -94,10 +98,10 @@ public class Tomasulo {
         Register destination = instruction.getDestination();
         Register op1 = instruction.getOperand1();
         Register op2 = instruction.getOperand2();
-        double immediateValue = instruction.getImmediateValue();
+        Double immediateValue = instruction.getImmediateValue();
 
-        double Vj = 0;
-        double Vk = 0;
+        Double Vj = null;
+        Double Vk = null;
         String Qj = "";
         String Qk = "";
         int address = 0;
@@ -111,7 +115,8 @@ public class Tomasulo {
                 return;
             }
 
-            address = (int) immediateValue;
+            // cast immediate value to int to get address
+            address = (int) Math.round(immediateValue);
 
             tag = loadBuffer.issueInstruction(operation, Vj, Vk, Qj, Qk, address);
         } else if (operation.equals("S.D")) {
@@ -127,7 +132,9 @@ public class Tomasulo {
             else {
                 Qj = op1.getQi();
             }
-            address = (int) immediateValue;
+
+            // cast immediate value to int to get address
+            address = (int) Math.round(immediateValue);
 
             tag = storeBuffer.issueInstruction(operation, Vj, Vk, Qj, Qk, address);
         } else if (operation.equals("MUL.D") || operation.equals("DIV.D")) {

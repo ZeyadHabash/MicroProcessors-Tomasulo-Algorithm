@@ -2,8 +2,8 @@ public class ReservationStationRow {
     boolean busy;
     private String tag;
     private String operation;
-    private double Vj;
-    private double Vk;
+    private Double Vj;
+    private Double Vk;
     private String Qj;
     private String Qk;
     private int A; // Address to load/store
@@ -13,8 +13,8 @@ public class ReservationStationRow {
         this.tag = tag; // if add then A[num], if mul then M1, if load then L1, if store then S1, etc.
         this.busy = false;
         this.operation = "";
-        this.Vj = 0;
-        this.Vk = 0;
+        this.Vj = null;
+        this.Vk = null;
         this.Qj = "";
         this.Qk = "";
         this.A = 0;
@@ -45,19 +45,19 @@ public class ReservationStationRow {
         this.operation = operation;
     }
 
-    public double getVj() {
+    public Double getVj() {
         return Vj;
     }
 
-    public void setVj(double vj) {
+    public void setVj(Double vj) {
         Vj = vj;
     }
 
-    public double getVk() {
+    public Double getVk() {
         return Vk;
     }
 
-    public void setVk(double vk) {
+    public void setVk(Double vk) {
         Vk = vk;
     }
 
@@ -117,11 +117,11 @@ public class ReservationStationRow {
         result += this.tag + "\t";
         result += this.busy + "\t";
         if (!(this.tag.charAt(0) == 'L')) {
-            if (!(this.tag.charAt(0) == 'S')) result += this.operation + "\t";
-            result += this.Vj + "\t";
-            if (!(this.tag.charAt(0) == 'S')) result += this.Vk + "\t";
-            result += this.Qj + "\t";
-            if (!(this.tag.charAt(0) == 'S')) result += this.Qk + "\t";
+            if (!(this.tag.charAt(0) == 'S')) result += this.operation == "" ? "-\t" : this.operation + "\t";
+            result += this.Vj != null ? this.Vj + "\t" : "-\t";
+            if (!(this.tag.charAt(0) == 'S')) result += this.Vk != null ? this.Vk + "\t" : "-\t";
+            result += this.Qj.equals("") ? "-\t" : this.Qj + "\t";
+            if (!(this.tag.charAt(0) == 'S')) result += this.Qk.equals("") ? "-\t" : this.Qk + "\t";
         }
         result += this.A + "\t";
         return result;

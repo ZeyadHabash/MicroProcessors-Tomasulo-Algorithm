@@ -21,7 +21,7 @@ public class ReservationStation {
         return true;
     }
 
-    public String issueInstruction(String operation, double Vj, double Vk, String Qj, String Qk, int A) {
+    public String issueInstruction(String operation, Double Vj, Double Vk, String Qj, String Qk, int A) {
         for (int i = 0; i < size; i++) {
             if (!rows[i].isBusy()) {
                 rows[i].setBusy(true);

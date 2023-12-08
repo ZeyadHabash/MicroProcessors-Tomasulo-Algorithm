@@ -9,7 +9,7 @@ public class Instruction {
     private Register destination;
     private Register operand1; // j, if using registers for operands
     private Register operand2; // k, if using registers for operands
-    private double immediateValue; // if using immediate value for operand or Address for load/store
+    private Double immediateValue; // if using immediate value for operand or Address for load/store
     private int issue;
     private int executionStart;
     private int executionEnd;
@@ -28,7 +28,7 @@ public class Instruction {
     }
 
     // Constructor for L.D
-    public Instruction(String operation, Register destination, double immediateValue) {
+    public Instruction(String operation, Register destination, Double immediateValue) {
         this.operation = operation;
         this.destination = destination; // destination register if L.D, source register if BNEZ
         this.immediateValue = immediateValue; // address if L.D, label if BNEZ
@@ -39,7 +39,7 @@ public class Instruction {
     }
 
     // Constructor for S.D and BNEZ
-    public Instruction(String operation, double immediateValue, Register operand1) {
+    public Instruction(String operation, Double immediateValue, Register operand1) {
         this.operation = operation;
         this.immediateValue = immediateValue; // address
         this.operand1 = operand1; // source register
@@ -50,7 +50,7 @@ public class Instruction {
     }
 
     // Constructor for ADDI, SUBI
-    public Instruction(String operation, Register destination, Register operand1, double immediateValue) {
+    public Instruction(String operation, Register destination, Register operand1, Double immediateValue) {
         this.operation = operation;
         this.destination = destination; // destination register
         this.operand1 = operand1; // source register
@@ -95,11 +95,11 @@ public class Instruction {
         this.operand2 = operand2;
     }
 
-    public double getImmediateValue() {
+    public Double getImmediateValue() {
         return immediateValue;
     }
 
-    public void setImmediateValue(double immediateValue) {
+    public void setImmediateValue(Double immediateValue) {
         this.immediateValue = immediateValue;
     }
 
@@ -140,12 +140,11 @@ public class Instruction {
         res += this.operation + "\t";
         if (this.destination != null) {
             res += this.destination.getLabel() + "\t";
-        }
-        else if (this.operation.equals("BNEZ")) {
+        } else if (this.operation.equals("BNEZ")) {
             res += this.immediateValue + "\t";
         }
 
-        if (this.operation.equals("L.D")  || this.operation.equals("BNEZ")) {
+        if (this.operation.equals("L.D") || this.operation.equals("BNEZ")) {
             res += 0 + "\t";
         }
         if (this.operand1 != null) {
@@ -157,7 +156,18 @@ public class Instruction {
             res += this.operand2.getLabel() + "\t";
         }
         if (this.operation.equals("L.D") || this.operation.equals("S.D") || this.operation.equals("ADDI") || this.operation.equals("SUBI")) {
-            res += this.immediateValue;
+            res += this.immediateValue + "\t";
+        }
+        if (this.issue >= 0) {
+            res += this.issue + "\t";
+            if (this.executionStart >= 0) {
+                res += this.executionStart + "...";
+                if (this.executionEnd >= executionStart) {
+                    res += this.executionEnd + "\t";
+                    if (this.writeResult >= executionEnd)
+                        res += this.writeResult + "\t";
+                }
+            }
         }
         return res;
     }

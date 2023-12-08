@@ -24,18 +24,18 @@ public class CodeParser {
                     hasLabel = 0;
                 } else if (tokens[hasLabel].equals("L.D")) {
                     Register destination = RegisterFile.getRegister(tokens[hasLabel + 1]);
-                    double immediateValue = Double.parseDouble(tokens[hasLabel + 2]);
+                    Double immediateValue = Double.parseDouble(tokens[hasLabel + 2]);
                     instruction = new Instruction(tokens[hasLabel], destination, immediateValue);
                     hasLabel = 0;
                 } else if (tokens[hasLabel].equals("S.D")) {
                     Register operand1 = RegisterFile.getRegister(tokens[hasLabel + 1]);
-                    double immediateValue = Double.parseDouble(tokens[hasLabel + 2]);
+                    Double immediateValue = Double.parseDouble(tokens[hasLabel + 2]);
                     instruction = new Instruction(tokens[hasLabel], immediateValue, operand1);
                     hasLabel = 0;
                 } else if (tokens[hasLabel].equals("ADDI") || tokens[hasLabel].equals("SUBI")) {
                     Register destination = RegisterFile.getRegister(tokens[hasLabel + 1]);
                     Register operand1 = RegisterFile.getRegister(tokens[hasLabel + 2]);
-                    double immediateValue = Double.parseDouble(tokens[hasLabel + 3]);
+                    Double immediateValue = Double.parseDouble(tokens[hasLabel + 3]);
                     instruction = new Instruction(tokens[hasLabel], destination, operand1, immediateValue);
                     hasLabel = 0;
                 } else if (tokens[hasLabel].equals("BNEZ")) {
@@ -47,7 +47,7 @@ public class CodeParser {
                             immediateValue.set(value);
                         }
                     });
-                    instruction = new Instruction(tokens[hasLabel], immediateValue.get(), operand1);
+                    instruction = new Instruction(tokens[hasLabel], Double.valueOf(immediateValue.get()), operand1);
                     hasLabel = 0;
                 } else {
                     // if we have a label add it to the map and stay in this line
