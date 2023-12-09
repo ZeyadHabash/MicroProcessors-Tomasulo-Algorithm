@@ -36,6 +36,7 @@ public class Tomasulo {
     boolean branchStall = false; // Stall due to branch
     boolean rsStall = false; // Stall due to reservation station being full
 
+
     // Constructors
     private Tomasulo(int addStationSize, int mulStationSize, int loadBufferSize, int storeBufferSize, int addLatency, int subLatency, int mulLatency, int divLatency, int loadLatency, int storeLatency, int SUBILatency, int DADDLatency, int DSUBLatency) {
         this.addStationSize = addStationSize;
@@ -289,7 +290,74 @@ public class Tomasulo {
 
     public void writeResult() {
 
+        ReservationStationRow row = getRowToWrite();
+        if (row == null) {
+            return;
+        }
+        writeResult(row);
+
+
     }
+        // loop through reservation stations and check if any are ready to write result
+    public void writeResult(ReservationStationRow row) {
+
+
+
+        //update the value of the destination register
+        // loop over reservation stations and check if any are waiting on this tag
+        // if so, decrement use count ?? todo
+        //  add it to vj or vk and set qj or qk to empty
+        // clear the reservation station row
+
+        String tag = row.getTag();
+
+
+        //updating value in register file
+        for (int i = 0; i< registerFile.getNumRegisters(); i++){
+            if (registerFile.getRegister(i).getQi().equals(tag)){
+                registerFile.getRegister(i).setValue(row.getResult());
+                registerFile.getRegister(i).setQi("");
+            }
+        }
+
+        //updating reservation stations
+        for (int i = 0; i < addStationSize; i++) {
+            if (addReservationStation.rows[i].getQj().equals(tag)) {
+                addReservationStation.rows[i].setVj(row.getResult());
+                addReservationStation.rows[i].setQj("");
+            }
+            if (addReservationStation.rows[i].getQk().equals(tag)) {
+                addReservationStation.rows[i].setVk(row.getResult());
+                addReservationStation.rows[i].setQk("");
+            }
+        }
+        for (int i = 0 ; i< mulStationSize ; i++){
+            if (mulReservationStation.rows[i].getQj().equals(tag)) {
+                mulReservationStation.rows[i].setVj(row.getResult());
+                mulReservationStation.rows[i].setQj("");
+            }
+            if (mulReservationStation.rows[i].getQk().equals(tag)) {
+                mulReservationStation.rows[i].setVk(row.getResult());
+                mulReservationStation.rows[i].setQk("");
+            }
+        }
+        for (int i = 0 ; i< storeBufferSize ; i++){
+            if (storeBuffer.rows[i].getQj().equals(tag)) {
+                storeBuffer.rows[i].setVj(row.getResult());
+                storeBuffer.rows[i].setQj("");
+            }
+            if (storeBuffer.rows[i].getQk().equals(tag)) {
+                storeBuffer.rows[i].setVk(row.getResult());
+                storeBuffer.rows[i].setQk("");
+            }
+        }
+
+        //clearing the reservation station row
+        row.clear();
+    }
+
+
+
 
 
     // Helper functions
@@ -400,7 +468,7 @@ public class Tomasulo {
                 default:
                     break;
             }
-            row.getInstruction().setExecutionEnd(currentCycle + instructionLatency);
+            row.getInstruction().setExecutionEnd(currentCycle + instructionLatency - 1);
         }
         // execute the instruction if end cycle is reached
         if (currentCycle == row.getInstruction().getExecutionEnd()) {
@@ -438,6 +506,39 @@ public class Tomasulo {
                     break;
             }
         }
+    }
+
+   //get the label with the highest priority to write back
+    public ReservationStationRow getRowToWrite(){
+        //write res everywhere and clear reseravation station
+        int maxPriority = 0;
+        Integer priority = null;
+        ReservationStationRow rowToWrite = null;
+        for (int i = 0; i < addStationSize; i++) {
+            //System.out.println("hellp+" +addReservationStation.rows[i].isReadyToWriteRes());
+             priority = addReservationStation.rows[i].isReadyToWriteRes();
+            if (priority != null && priority > maxPriority) {
+                rowToWrite = addReservationStation.rows[i];
+                maxPriority = addReservationStation.rows[i].isReadyToWriteRes();
+            }
+        }
+        for (int i = 0; i < mulStationSize; i++) {
+             priority = mulReservationStation.rows[i].isReadyToWriteRes();
+            if (priority != null && priority > maxPriority) {
+                rowToWrite = mulReservationStation.rows[i];
+                maxPriority = mulReservationStation.rows[i].isReadyToWriteRes();
+            }
+        }
+        for (int i = 0; i < storeBufferSize; i++) {
+            priority = storeBuffer.rows[i].isReadyToWriteRes();
+            if (priority != null && priority > maxPriority) {
+                rowToWrite = storeBuffer.rows[i];
+                maxPriority = storeBuffer.rows[i].isReadyToWriteRes();
+            }
+        }
+        //setting maxPriority to 0 again for writing back in the next cycle
+    return rowToWrite;
+
     }
 
     // Print functions

@@ -1,9 +1,9 @@
 public class Register {
     private String label;
     private String Qi;
-    private double value;
+    private Double value;
 
-    public Register(String label, double value) {
+    public Register(String label, Double value) {
         this.label = label;
         this.Qi = "0";
         this.value = value;
@@ -26,11 +26,11 @@ public class Register {
         Qi = qi;
     }
 
-    public double getValue() {
+    public Double getValue() {
         return value;
     }
 
-    public void setValue(float value) {
+    public void setValue(Double value) {
         if (this.label.equals("R0"))
             return;
         this.value = value;

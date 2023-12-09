@@ -125,6 +125,11 @@ public class ReservationStationRow {
         return (this.Qj.equals("") && this.Qk.equals("") && isBusy()) ;
     }
 
+    public Integer isReadyToWriteRes() {
+       if (this.result != null)
+           return this.getUseCount();
+         return null;
+    }
     public String toString() {
         String result = "";
         result += this.tag + "\t";
@@ -139,5 +144,18 @@ public class ReservationStationRow {
         result += this.A + "\t";
         result += this.result != null ? this.result + "\t" : "-\t";
         return result;
+    }
+
+    public void clear(){
+        this.busy = false;
+        this.operation = "";
+        this.Vj = null;
+        this.Vk = null;
+        this.Qj = "";
+        this.Qk = "";
+        this.A = 0;
+        this.useCount = 0;
+        this.result = null;
+        this.instruction = null;
     }
 }
