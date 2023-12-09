@@ -521,7 +521,7 @@ public class Tomasulo {
     public ReservationStationRow getRowToWrite() {
         //get the row with the highest priority to write back
         //write res everywhere and clear reseravation station
-        int maxPriority = 0;
+        int maxPriority = -1;
         Integer priority = null;
         ReservationStationRow rowToWrite = null;
 
