@@ -1,4 +1,4 @@
-public class Instruction {
+public class Instruction implements Cloneable {
     // ALl possible instructions
     // ADD.D, SUB.D, MUL.D, DIV.D, DADD, DSUB (register destination, 2 register operands)
     // L.D (register destination, Address)
@@ -135,9 +135,27 @@ public class Instruction {
         this.writeResult = writeResult;
     }
 
+    public Instruction clone() {
+        try {
+            Instruction cloned = (Instruction) super.clone();
+            if (this.destination != null) {
+                cloned.destination = this.destination;
+            }
+            if (this.operand1 != null) {
+                cloned.operand1 = this.operand1;
+            }
+            if (this.operand2 != null) {
+                cloned.operand2 = this.operand2;
+            }
+            return cloned;
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError("Cloning not supported", e);
+        }
+    }
+
     public String toString() {
         String res = "";
-        res += this.operation + "\t";
+        res += this.operation + "\t\t";
         if (this.destination != null) {
             res += this.destination.getLabel() + "\t";
         } else if (this.operation.equals("BNEZ")) {
@@ -153,17 +171,18 @@ public class Instruction {
         if (this.operation.equals("S.D"))
             res += 0 + "\t";
         if (this.operand2 != null) {
-            res += this.operand2.getLabel() + "\t";
+            res += this.operand2.getLabel() + "\t\t";
         }
         if (this.operation.equals("L.D") || this.operation.equals("S.D") || this.operation.equals("ADDI") || this.operation.equals("SUBI")) {
-            res += this.immediateValue + "\t";
+            res += this.immediateValue + "\t\t";
         }
         if (this.issue >= 0) {
-            res += this.issue + "\t";
+            res += this.issue + "\t\t";
             if (this.executionStart >= 0) {
                 res += this.executionStart + "...";
-                if (this.executionEnd >= executionStart) {
-                    res += this.executionEnd + "\t";
+                Tomasulo tomasulo = Tomasulo.getInstance();
+                if (this.executionEnd >= executionStart && tomasulo.currentCycle >= this.executionEnd){
+                    res += this.executionEnd + "\t\t";
                     if (this.writeResult >= executionEnd)
                         res += this.writeResult + "\t";
                 }

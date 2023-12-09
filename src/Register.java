@@ -1,4 +1,4 @@
-public class Register {
+public class Register{
     private String label;
     private String Qi;
     private Double value;
@@ -43,6 +43,7 @@ public class Register {
     public void reset() {
         this.Qi = "0";
     }
+
 
     public String toString(){
         return this.label + "\t" + this.Qi + "\t" + this.value;

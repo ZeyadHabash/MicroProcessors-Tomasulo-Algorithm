@@ -5,7 +5,7 @@ public class RegisterFile {
     public static void initRegisterFile() {
         // Initialize the register file
         for (int i = 0; i < 32; i++) {
-            registerFile[i] = new Register("R" + i, (double) (i * 2));
+            registerFile[i] = new Register("R" + i, (double) (i * 8));
         }
         for (int i = 32; i < 64; i++) {
             registerFile[i] = new Register("F" + (i - 32), i * 2.5);

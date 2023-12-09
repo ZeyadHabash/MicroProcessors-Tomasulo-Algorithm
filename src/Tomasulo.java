@@ -28,14 +28,13 @@ public class Tomasulo {
     int mulLatency = 10;
     int divLatency = 20;
     int loadLatency = 2;
-    int storeLatency = 2;
+    int storeLatency = 5;
     int SUBILatency = 1;
     int DADDLatency = 1;
     int DSUBLatency = 1;
 
     boolean branchStall = false; // Stall due to branch
     boolean rsStall = false; // Stall due to reservation station being full
-
 
     // Constructors
     private Tomasulo(int addStationSize, int mulStationSize, int loadBufferSize, int storeBufferSize, int addLatency, int subLatency, int mulLatency, int divLatency, int loadLatency, int storeLatency, int SUBILatency, int DADDLatency, int DSUBLatency) {
@@ -84,6 +83,7 @@ public class Tomasulo {
 //            cache[i] = i * 1.5;
             cache[i] = 0;
         }
+        cache[20] = 5;
 
         RegisterFile.initRegisterFile();
 
@@ -103,16 +103,18 @@ public class Tomasulo {
     // main function
     public void run() {
         // TODO: change later to handle stalls and branches
-        while (pc < program.size()) { // Update the current cycle number
+        while (pc < program.size() || isExecuting()) {
+//        while (currentCycle < 25) {
+            // Update the current cycle number
             currentCycle++;
 
 
             // if not branch stalling then:
             // - get instruction from program
             // - issue instruction
-            if (!branchStall) {
+            if (!branchStall && pc < program.size()) {
                 // get instruction from program
-                Instruction instruction = program.get(pc);
+                Instruction instruction = program.get(pc).clone();
 
                 // issue
                 issue(instruction);
@@ -289,79 +291,17 @@ public class Tomasulo {
     }
 
     public void writeResult() {
-
         ReservationStationRow row = getRowToWrite();
         if (row == null) {
             return;
         }
+
+        row.getInstruction().setWriteResult(currentCycle);
         writeResult(row);
-
-
     }
-        // loop through reservation stations and check if any are ready to write result
-    public void writeResult(ReservationStationRow row) {
-
-
-
-        //update the value of the destination register
-        // loop over reservation stations and check if any are waiting on this tag
-        // if so, decrement use count ?? todo
-        //  add it to vj or vk and set qj or qk to empty
-        // clear the reservation station row
-
-        String tag = row.getTag();
-
-
-        //updating value in register file
-        for (int i = 0; i< registerFile.getNumRegisters(); i++){
-            if (registerFile.getRegister(i).getQi().equals(tag)){
-                registerFile.getRegister(i).setValue(row.getResult());
-                registerFile.getRegister(i).setQi("");
-            }
-        }
-
-        //updating reservation stations
-        for (int i = 0; i < addStationSize; i++) {
-            if (addReservationStation.rows[i].getQj().equals(tag)) {
-                addReservationStation.rows[i].setVj(row.getResult());
-                addReservationStation.rows[i].setQj("");
-            }
-            if (addReservationStation.rows[i].getQk().equals(tag)) {
-                addReservationStation.rows[i].setVk(row.getResult());
-                addReservationStation.rows[i].setQk("");
-            }
-        }
-        for (int i = 0 ; i< mulStationSize ; i++){
-            if (mulReservationStation.rows[i].getQj().equals(tag)) {
-                mulReservationStation.rows[i].setVj(row.getResult());
-                mulReservationStation.rows[i].setQj("");
-            }
-            if (mulReservationStation.rows[i].getQk().equals(tag)) {
-                mulReservationStation.rows[i].setVk(row.getResult());
-                mulReservationStation.rows[i].setQk("");
-            }
-        }
-        for (int i = 0 ; i< storeBufferSize ; i++){
-            if (storeBuffer.rows[i].getQj().equals(tag)) {
-                storeBuffer.rows[i].setVj(row.getResult());
-                storeBuffer.rows[i].setQj("");
-            }
-            if (storeBuffer.rows[i].getQk().equals(tag)) {
-                storeBuffer.rows[i].setVk(row.getResult());
-                storeBuffer.rows[i].setQk("");
-            }
-        }
-
-        //clearing the reservation station row
-        row.clear();
-    }
-
-
-
 
 
     // Helper functions
-
     public void decrementUseCount(String tag) {
         if (tag.charAt(0) == 'A') {
             for (int i = 0; i < addStationSize; i++) {
@@ -418,6 +358,10 @@ public class Tomasulo {
         }
     }
 
+    public boolean isExecuting() {
+        // check if all reservation stations and buffers are empty
+        return !(addReservationStation.isEmpty() && mulReservationStation.isEmpty() && loadBuffer.isEmpty() && storeBuffer.isEmpty());
+    }
 
     public void execute(ReservationStationRow row) {
         // check the operation of the instruction
@@ -425,6 +369,10 @@ public class Tomasulo {
         Double Vj = row.getVj();
         Double Vk = row.getVk();
         int instructionLatency = 0;
+
+        // if instruction was just issued this cycle return
+        if (row.getInstruction().getIssue() == currentCycle)
+            return;
 
         // add the execute cycle to the instruction
         if (row.getInstruction().getExecutionStart() == -1) {
@@ -493,14 +441,16 @@ public class Tomasulo {
                 case "L.D":
                     row.setResult(cache[row.getA()]);
                     break;
-                case "S.D":
-                    cache[row.getA()] = Vj;
-                    break;
+//                case "S.D":
+//                    cache[row.getA()] = Vj;
+//                    break;
                 case "BNEZ":
-                    if (Vj != 0) {
+                    if (Vj != null && Vj != 0) {
                         pc = (int) Math.round(Vk);
-                        branchStall = false;
+                    } else {
+                        pc++;
                     }
+                    branchStall = false;
                     break;
                 default:
                     break;
@@ -508,36 +458,152 @@ public class Tomasulo {
         }
     }
 
-   //get the label with the highest priority to write back
-    public ReservationStationRow getRowToWrite(){
+    public void writeResult(ReservationStationRow row) {
+        // loop through reservation stations and check if any are ready to write result
+
+
+        //update the value of the destination register
+        // loop over reservation stations and check if any are waiting on this tag
+        // if so, decrement use count ?? todo
+        //  add it to vj or vk and set qj or qk to empty
+        // clear the reservation station row
+
+        String tag = row.getTag();
+
+        if (tag.charAt(0) == 'S') {
+            //storing the value in the cache
+            cache[row.getA()] = row.getVj();
+        } else {
+            //updating value in register file
+            for (int i = 0; i < RegisterFile.getNumRegisters(); i++) {
+                if (RegisterFile.getRegister(i).getQi().equals(tag)) {
+                    RegisterFile.getRegister(i).setValue(row.getResult());
+                    RegisterFile.getRegister(i).setQi("0");
+                }
+            }
+
+            //updating reservation stations
+            for (int i = 0; i < addStationSize; i++) {
+                if (addReservationStation.rows[i].getQj().equals(tag)) {
+                    addReservationStation.rows[i].setVj(row.getResult());
+                    addReservationStation.rows[i].setQj("");
+                }
+                if (addReservationStation.rows[i].getQk().equals(tag)) {
+                    addReservationStation.rows[i].setVk(row.getResult());
+                    addReservationStation.rows[i].setQk("");
+                }
+            }
+            for (int i = 0; i < mulStationSize; i++) {
+                if (mulReservationStation.rows[i].getQj().equals(tag)) {
+                    mulReservationStation.rows[i].setVj(row.getResult());
+                    mulReservationStation.rows[i].setQj("");
+                }
+                if (mulReservationStation.rows[i].getQk().equals(tag)) {
+                    mulReservationStation.rows[i].setVk(row.getResult());
+                    mulReservationStation.rows[i].setQk("");
+                }
+            }
+            for (int i = 0; i < storeBufferSize; i++) {
+                if (storeBuffer.rows[i].getQj().equals(tag)) {
+                    storeBuffer.rows[i].setVj(row.getResult());
+                    storeBuffer.rows[i].setQj("");
+                }
+                if (storeBuffer.rows[i].getQk().equals(tag)) {
+                    storeBuffer.rows[i].setVk(row.getResult());
+                    storeBuffer.rows[i].setQk("");
+                }
+            }
+        }
+        //clearing the reservation station row
+        row.clear();
+    }
+
+    public ReservationStationRow getRowToWrite() {
+        //get the row with the highest priority to write back
         //write res everywhere and clear reseravation station
         int maxPriority = 0;
         Integer priority = null;
         ReservationStationRow rowToWrite = null;
+
         for (int i = 0; i < addStationSize; i++) {
-            //System.out.println("hellp+" +addReservationStation.rows[i].isReadyToWriteRes());
-             priority = addReservationStation.rows[i].isReadyToWriteRes();
-            if (priority != null && priority > maxPriority) {
-                rowToWrite = addReservationStation.rows[i];
-                maxPriority = addReservationStation.rows[i].isReadyToWriteRes();
+            // if the instruction is BNEZ, and it has finished executing, write result and clear
+            if (addReservationStation.rows[i].isBusy() &&
+                    addReservationStation.rows[i].getOperation().equals("BNEZ") &&
+                    addReservationStation.rows[i].getInstruction().getExecutionEnd() < currentCycle &&
+                    addReservationStation.rows[i].getInstruction().getExecutionEnd() >= 0) {
+                addReservationStation.rows[i].getInstruction().setWriteResult(currentCycle);
+                addReservationStation.rows[i].clear();
+                continue; // do not check priority as BNEZ does not write to bus
+            }
+            priority = addReservationStation.rows[i].isReadyToWriteRes();
+            if (priority != null && addReservationStation.rows[i].getInstruction().getExecutionEnd() < currentCycle) {
+                if (priority > maxPriority) {
+                    rowToWrite = addReservationStation.rows[i];
+                    maxPriority = addReservationStation.rows[i].isReadyToWriteRes();
+                } else if (priority == maxPriority && rowToWrite != null &&
+                        rowToWrite.getInstruction().getIssue() > addReservationStation.rows[i].getInstruction().getIssue()) {
+                    rowToWrite = addReservationStation.rows[i];
+                    maxPriority = addReservationStation.rows[i].isReadyToWriteRes();
+                }
             }
         }
+
         for (int i = 0; i < mulStationSize; i++) {
-             priority = mulReservationStation.rows[i].isReadyToWriteRes();
-            if (priority != null && priority > maxPriority) {
-                rowToWrite = mulReservationStation.rows[i];
-                maxPriority = mulReservationStation.rows[i].isReadyToWriteRes();
+            priority = mulReservationStation.rows[i].isReadyToWriteRes();
+            if (priority != null && mulReservationStation.rows[i].getInstruction().getExecutionEnd() < currentCycle) {
+                if (priority > maxPriority) {
+                    rowToWrite = mulReservationStation.rows[i];
+                    maxPriority = mulReservationStation.rows[i].isReadyToWriteRes();
+                } else if (priority == maxPriority && rowToWrite != null &&
+                        rowToWrite.getInstruction().getIssue() > mulReservationStation.rows[i].getInstruction().getIssue()) {
+                    rowToWrite = mulReservationStation.rows[i];
+                    maxPriority = mulReservationStation.rows[i].isReadyToWriteRes();
+                }
+            }
+        }
+        for (int i = 0; i < loadBufferSize; i++) {
+            priority = loadBuffer.rows[i].isReadyToWriteRes();
+            if (priority != null && loadBuffer.rows[i].getInstruction().getExecutionEnd() < currentCycle) {
+                if (priority > maxPriority) {
+                    rowToWrite = loadBuffer.rows[i];
+                    maxPriority = loadBuffer.rows[i].isReadyToWriteRes();
+                } else if (priority == maxPriority && rowToWrite != null &&
+                        rowToWrite.getInstruction().getIssue() > loadBuffer.rows[i].getInstruction().getIssue()) {
+                    rowToWrite = loadBuffer.rows[i];
+                    maxPriority = loadBuffer.rows[i].isReadyToWriteRes();
+                }
             }
         }
         for (int i = 0; i < storeBufferSize; i++) {
             priority = storeBuffer.rows[i].isReadyToWriteRes();
-            if (priority != null && priority > maxPriority) {
-                rowToWrite = storeBuffer.rows[i];
-                maxPriority = storeBuffer.rows[i].isReadyToWriteRes();
+            if (priority != null && storeBuffer.rows[i].getInstruction().getExecutionEnd() < currentCycle) {
+                if (priority > maxPriority) {
+                    rowToWrite = storeBuffer.rows[i];
+                    maxPriority = storeBuffer.rows[i].isReadyToWriteRes();
+                } else if (priority == maxPriority && rowToWrite != null &&
+                        rowToWrite.getInstruction().getIssue() > storeBuffer.rows[i].getInstruction().getIssue()) {
+                    rowToWrite = storeBuffer.rows[i];
+                    maxPriority = storeBuffer.rows[i].isReadyToWriteRes();
+                }
             }
         }
+
+//        // clear any store buffer row that has an instruction that has finished executing
+//        for (int i = 0; i < storeBufferSize; i++) {
+//            if (storeBuffer.rows[i].isBusy() &&
+//                    storeBuffer.rows[i].getInstruction().getExecutionEnd() > 0 &&
+//                    storeBuffer.rows[i].getInstruction().getExecutionEnd() < currentCycle) {
+//                //storing the value in the cache
+//                cache[storeBuffer.rows[i].getA()] = storeBuffer.rows[i].getVj();
+//
+//                storeBuffer.rows[i].getInstruction().setWriteResult(currentCycle);
+//
+//                storeBuffer.rows[i].clear();
+//            }
+//        }
+
         //setting maxPriority to 0 again for writing back in the next cycle
-    return rowToWrite;
+        return rowToWrite;
 
     }
 

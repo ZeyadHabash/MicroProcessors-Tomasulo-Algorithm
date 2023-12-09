@@ -122,14 +122,16 @@ public class ReservationStationRow {
     }
 
     public boolean isReadyToExecute() {
-        return (this.Qj.equals("") && this.Qk.equals("") && isBusy()) ;
+        return (this.Qj.equals("") && this.Qk.equals("") && isBusy());
     }
 
     public Integer isReadyToWriteRes() {
-       if (this.result != null)
-           return this.getUseCount();
-         return null;
+        Tomasulo tomasulo = Tomasulo.getInstance();
+        if (this.isBusy() && this.getInstruction().getExecutionEnd() >= 0 && tomasulo.currentCycle > this.getInstruction().getExecutionEnd())
+            return this.getUseCount();
+        return null;
     }
+
     public String toString() {
         String result = "";
         result += this.tag + "\t";
@@ -143,10 +145,22 @@ public class ReservationStationRow {
         }
         result += this.A + "\t";
         result += this.result != null ? this.result + "\t" : "-\t";
+        result += this.useCount;
         return result;
     }
 
-    public void clear(){
+    public void clear() {
+        // clear reservation station stall if the station was full
+        Tomasulo tomasulo = Tomasulo.getInstance();
+        if (this.tag.charAt(0) == 'L' && tomasulo.loadBuffer.isFull()) {
+            tomasulo.rsStall = false;
+        } else if (this.tag.charAt(0) == 'S' && tomasulo.storeBuffer.isFull()) {
+            tomasulo.rsStall = false;
+        } else if (this.tag.charAt(0) == 'A' && tomasulo.addReservationStation.isFull()) {
+            tomasulo.rsStall = false;
+        } else if (this.tag.charAt(0) == 'M' && tomasulo.mulReservationStation.isFull()) {
+            tomasulo.rsStall = false;
+        }
         this.busy = false;
         this.operation = "";
         this.Vj = null;

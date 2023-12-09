@@ -20,6 +20,14 @@ public class ReservationStation {
         }
         return true;
     }
+    public boolean isEmpty() {
+        for (int i = 0; i < size; i++) {
+            if (rows[i].isBusy()) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     public String issueInstruction(String operation, Double Vj, Double Vk, String Qj, String Qk, int A, Instruction instruction) {
         for (int i = 0; i < size; i++) {
@@ -43,11 +51,11 @@ public class ReservationStation {
 
     public void print() {
         if (name.equals("load")) {
-            System.out.println("Tag\tBusy\tAddress\tResult");
+            System.out.println("Tag\tBusy\tAddress\tResult\tUse Count");
         } else if (name.equals("store")) {
-            System.out.println("Tag\tBusy\tV\tQ\tA\tResult");
+            System.out.println("Tag\tBusy\tV\tQ\tA\tResult\tUse Count");
         } else
-            System.out.println("Tag\tBusy\tOp\tVj\tVk\tQj\tQk\tA\tResult");
+            System.out.println("Tag\tBusy\tOp\tVj\tVk\tQj\tQk\tA\tResult\tUse Count");
         for (int i = 0; i < size; i++) {
             System.out.println(rows[i].toString());
         }
