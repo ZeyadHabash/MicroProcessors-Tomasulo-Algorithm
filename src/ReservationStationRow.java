@@ -8,8 +8,8 @@ public class ReservationStationRow {
     private String Qk;
     private int A; // Address to load/store
     private int useCount; // counts how many other instructions are waiting on this result (used to determine write back priority)
-
     private Double result; // result of the instruction (used for write back)
+    private Instruction instruction; // instruction that is currently in the reservation station row
 
     public ReservationStationRow(String tag) {
         this.tag = tag; // if add then A[num], if mul then M1, if load then L1, if store then S1, etc.
@@ -22,6 +22,7 @@ public class ReservationStationRow {
         this.A = 0;
         this.useCount = 0;
         this.result = null;
+        this.instruction = null;
     }
 
     public String getTag() {
@@ -112,23 +113,20 @@ public class ReservationStationRow {
         this.result = result;
     }
 
+    public Instruction getInstruction() {
+        return instruction;
+    }
+
+    public void setInstruction(Instruction instruction) {
+        this.instruction = instruction;
+    }
+
     public boolean isReadyToExecute() {
-        return (this.Qj.equals("") && this.Qk.equals(""));
+        return (this.Qj.equals("") && this.Qk.equals("") && isBusy()) ;
     }
 
     public String toString() {
         String result = "";
-//        result += "Tag: " + this.tag + " | ";
-//        result += "Busy: " + this.busy + " | ";
-//        result += "Operation: " + this.operation + " | ";
-//        if (!(this.operation.equals("L.D") || this.operation.equals("S.D"))) {
-//            result += "Vj: " + this.Vj + " | ";
-//            if (!(this.operation.equals("S.D"))) result += "Vk: " + this.Vk + " | ";
-//            result += "Qj: " + this.Qj + " | ";
-//            if (!(this.operation.equals("S.D"))) result += "Qk: " + this.Qk + " | ";
-//        }
-//        result += "A: " + this.A + " | ";
-//        result += "Use Count: " + this.useCount + " | ";
         result += this.tag + "\t";
         result += this.busy + "\t";
         if (!(this.tag.charAt(0) == 'L')) {
@@ -139,6 +137,7 @@ public class ReservationStationRow {
             if (!(this.tag.charAt(0) == 'S')) result += this.Qk.equals("") ? "-\t" : this.Qk + "\t";
         }
         result += this.A + "\t";
+        result += this.result != null ? this.result + "\t" : "-\t";
         return result;
     }
 }

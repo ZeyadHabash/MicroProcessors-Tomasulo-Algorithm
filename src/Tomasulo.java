@@ -33,8 +33,36 @@ public class Tomasulo {
     int DADDLatency = 1;
     int DSUBLatency = 1;
 
+    boolean branchStall = false; // Stall due to branch
+    boolean rsStall = false; // Stall due to reservation station being full
+
+    // Constructors
+    private Tomasulo(int addStationSize, int mulStationSize, int loadBufferSize, int storeBufferSize, int addLatency, int subLatency, int mulLatency, int divLatency, int loadLatency, int storeLatency, int SUBILatency, int DADDLatency, int DSUBLatency) {
+        this.addStationSize = addStationSize;
+        this.mulStationSize = mulStationSize;
+        this.loadBufferSize = loadBufferSize;
+        this.storeBufferSize = storeBufferSize;
+        this.addLatency = addLatency;
+        this.subLatency = subLatency;
+        this.mulLatency = mulLatency;
+        this.divLatency = divLatency;
+        this.loadLatency = loadLatency;
+        this.storeLatency = storeLatency;
+        this.SUBILatency = SUBILatency;
+        this.DADDLatency = DADDLatency;
+        this.DSUBLatency = DSUBLatency;
+    }
+
     private Tomasulo() {
         // Exists only to defeat instantiation.
+    }
+
+    // Singleton functions
+    public static Tomasulo getInstance(int addStationSize, int mulStationSize, int loadBufferSize, int storeBufferSize, int addLatency, int subLatency, int mulLatency, int divLatency, int loadLatency, int storeLatency, int SUBILatency, int DADDLatency, int DSUBLatency) {
+        if (instance == null) {
+            instance = new Tomasulo(addStationSize, mulStationSize, loadBufferSize, storeBufferSize, addLatency, subLatency, mulLatency, divLatency, loadLatency, storeLatency, SUBILatency, DADDLatency, DSUBLatency);
+        }
+        return instance;
     }
 
     public static Tomasulo getInstance() {
@@ -44,6 +72,7 @@ public class Tomasulo {
         return instance;
     }
 
+    // initialization function
     public void init() {
         // TODO: Initialize latencies through user input
 
@@ -51,7 +80,8 @@ public class Tomasulo {
 
         // Initialize the cache
         for (int i = 0; i < 1024; i++) {
-            cache[i] = i * 1.5;
+//            cache[i] = i * 1.5;
+            cache[i] = 0;
         }
 
         RegisterFile.initRegisterFile();
@@ -69,16 +99,27 @@ public class Tomasulo {
         program = CodeParser.readFile(fileName);
     }
 
+    // main function
     public void run() {
         // TODO: change later to handle stalls and branches
-        while (pc < program.size()){ // Update the current cycle number
+        while (pc < program.size()) { // Update the current cycle number
             currentCycle++;
 
-            // get instruction from program
-            Instruction instruction = program.get(pc);
 
-            // issue
-            issue(instruction);
+            // if not branch stalling then:
+            // - get instruction from program
+            // - issue instruction
+            if (!branchStall) {
+                // get instruction from program
+                Instruction instruction = program.get(pc);
+
+                // issue
+                issue(instruction);
+            }
+
+            // TODO: change later to handle stalls and branches
+            // increment program counter if not rs stalling or branch stalling
+            if (!rsStall && !branchStall) pc++;
 
             // Execute
             execute();
@@ -89,9 +130,6 @@ public class Tomasulo {
             // print
             print();
 
-            // increment program counter
-            // TODO: change later to handle stalls and branches
-            pc++;
         }
     }
 
@@ -114,15 +152,17 @@ public class Tomasulo {
         // issue to reservation station
         if (operation.equals("L.D")) {
             if (loadBuffer.isFull()) {
+                rsStall = true;
                 return;
             }
 
             // cast immediate value to int to get address
             address = (int) Math.round(immediateValue);
 
-            tag = loadBuffer.issueInstruction(operation, Vj, Vk, Qj, Qk, address);
+            tag = loadBuffer.issueInstruction(operation, Vj, Vk, Qj, Qk, address, instruction);
         } else if (operation.equals("S.D")) {
             if (storeBuffer.isFull()) {
+                rsStall = true;
                 return;
             }
 
@@ -138,9 +178,10 @@ public class Tomasulo {
             // cast immediate value to int to get address
             address = (int) Math.round(immediateValue);
 
-            tag = storeBuffer.issueInstruction(operation, Vj, Vk, Qj, Qk, address);
+            tag = storeBuffer.issueInstruction(operation, Vj, Vk, Qj, Qk, address, instruction);
         } else if (operation.equals("MUL.D") || operation.equals("DIV.D")) {
             if (mulReservationStation.isFull()) {
+                rsStall = true;
                 return;
             }
 
@@ -162,9 +203,10 @@ public class Tomasulo {
                 Qk = op2.getQi();
             }
 
-            tag = mulReservationStation.issueInstruction(operation, Vj, Vk, Qj, Qk, address);
+            tag = mulReservationStation.issueInstruction(operation, Vj, Vk, Qj, Qk, address, instruction);
         } else {
             if (addReservationStation.isFull()) {
+                rsStall = true;
                 return;
             }
 
@@ -191,7 +233,7 @@ public class Tomasulo {
                 }
             }
 
-            tag = addReservationStation.issueInstruction(operation, Vj, Vk, Qj, Qk, address);
+            tag = addReservationStation.issueInstruction(operation, Vj, Vk, Qj, Qk, address, instruction);
         }
         // put in instruction queue and set issue cycle
         instruction.setIssue(currentCycle);
@@ -208,6 +250,11 @@ public class Tomasulo {
         }
         if (!Qk.equals("")) {
             incrementUseCount(Qk);
+        }
+
+        // set branch stall to true if BNEZ
+        if (operation.equals("BNEZ")) {
+            branchStall = true;
         }
     }
 
@@ -238,56 +285,6 @@ public class Tomasulo {
                 execute(storeBuffer.rows[i]);
             }
         }
-
-
-
-//        // check if reservation station is ready to write result
-//        // if not, return
-//        if (!isReadyToWriteResult(tag)) {
-//            return;
-//        }
-//
-//        // check if reservation station is ready to write result
-//        // if not, return
-//        if (!isReadyToWriteResult(tag)) {
-//            return;
-//        }
-//
-//        // check if reservation station is ready to write result
-//        // if not, return
-//        if (!isReadyToWriteResult(tag)) {
-//            return;
-//        }
-//
-//        // check if reservation station is ready to write result
-//        // if not, return
-//        if (!isReadyToWriteResult(tag)) {
-//            return;
-//        }
-//
-//        // check if reservation station is ready to write result
-//        // if not, return
-//        if (!isReadyToWriteResult(tag)) {
-//            return;
-//        }
-//
-//        // check if reservation station is ready to write result
-//        // if not, return
-//        if (!isReadyToWriteResult(tag)) {
-//            return;
-//        }
-//
-//        // check if reservation station is ready to write result
-//        // if not, return
-//        if (!isReadyToWriteResult(tag)) {
-//            return;
-//        }
-//
-//        // check if reservation station is ready to write result
-//        // if not, return
-//        if (!isReadyToWriteResult(tag)) {
-//            return;
-//        }
     }
 
     public void writeResult() {
@@ -324,6 +321,7 @@ public class Tomasulo {
             }
         }
     }
+
     public void incrementUseCount(String tag) {
         if (tag.charAt(0) == 'A') {
             for (int i = 0; i < addStationSize; i++) {
@@ -353,52 +351,105 @@ public class Tomasulo {
     }
 
 
-    public void execute(ReservationStationRow row){
+    public void execute(ReservationStationRow row) {
         // check the operation of the instruction
         String operation = row.getOperation();
         Double Vj = row.getVj();
         Double Vk = row.getVk();
+        int instructionLatency = 0;
+
         // add the execute cycle to the instruction
-        switch (operation) {
-            case "ADD.D":
-            case "DADD":
-            row.setResult(Vj + Vk);
-                break;
-            case "SUB.D":
-            case "DSUB":
-            row.setResult(Vj - Vk);
-                break;
-            case "MUL.D":
-                row.setResult(Vj * Vk);
-                break;
-            case "DIV.D":
-                row.setResult(Vj / Vk);
-                break;
-            case "L.D":
-                row.setResult(cache[row.getA()]);
-                break;
-            case "S.D":
+        if (row.getInstruction().getExecutionStart() == -1) {
+            row.getInstruction().setExecutionStart(currentCycle);
 
-                break;
-            case "ADDI":
-
-                break;
-            case "SUBI":
-
-                break;
-            case "BNEZ":
-
-                break;
+            // set the execution end cycle
+            switch (operation) {
+                case "ADD.D":
+                    instructionLatency = addLatency;
+                    break;
+                case "DADD":
+                    instructionLatency = DADDLatency;
+                    break;
+                case "SUB.D":
+                    instructionLatency = subLatency;
+                    break;
+                case "DSUB":
+                    instructionLatency = DSUBLatency;
+                    break;
+                case "MUL.D":
+                    instructionLatency = mulLatency;
+                    break;
+                case "DIV.D":
+                    instructionLatency = divLatency;
+                    break;
+                case "L.D":
+                    instructionLatency = loadLatency;
+                    break;
+                case "S.D":
+                    instructionLatency = storeLatency;
+                    break;
+                case "ADDI":
+                    instructionLatency = ADDILatency;
+                    break;
+                case "SUBI":
+                    instructionLatency = SUBILatency;
+                    break;
+                case "BNEZ":
+                    instructionLatency = BNEZLatency;
+                    break;
+                default:
+                    break;
+            }
+            row.getInstruction().setExecutionEnd(currentCycle + instructionLatency);
+        }
+        // execute the instruction if end cycle is reached
+        if (currentCycle == row.getInstruction().getExecutionEnd()) {
+            // check the operation of the instruction
+            switch (operation) {
+                case "ADD.D":
+                case "DADD":
+                case "ADDI":
+                    row.setResult(Vj + Vk);
+                    break;
+                case "SUB.D":
+                case "DSUB":
+                case "SUBI":
+                    row.setResult(Vj - Vk);
+                    break;
+                case "MUL.D":
+                    row.setResult(Vj * Vk);
+                    break;
+                case "DIV.D":
+                    row.setResult(Vj / Vk);
+                    break;
+                case "L.D":
+                    row.setResult(cache[row.getA()]);
+                    break;
+                case "S.D":
+                    cache[row.getA()] = Vj;
+                    break;
+                case "BNEZ":
+                    if (Vj != 0) {
+                        pc = (int) Math.round(Vk);
+                        branchStall = false;
+                    }
+                    break;
+                default:
+                    break;
+            }
         }
     }
 
     // Print functions
     public void print() {
-        System.out.println("Program: ");
-        printProgram();
+//        System.out.println("Program: ");
+//        printProgram();
+        System.out.println("Stalls:");
+        System.out.println("Branch Stall: " + branchStall);
+        System.out.println("RS Stall: " + rsStall);
         System.out.println("Cycle: " + currentCycle);
         System.out.println("PC: " + pc);
-        RegisterFile.printRegisterFile();
+//        RegisterFile.printRegisterFile();
         System.out.println("Reservation Stations:");
         System.out.println("Add Reservation Station:");
         addReservationStation.print();
