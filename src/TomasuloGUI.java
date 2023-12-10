@@ -156,15 +156,18 @@ public class TomasuloGUI extends JFrame {
                 int SUBILatency = Integer.parseInt(SUBILatencyField.getText());
                 int DADDLatency = Integer.parseInt(DADDLatencyField.getText());
                 int DSUBLatency = Integer.parseInt(DSUBLatencyField.getText());
-                // Parse more fields
+
+                // Clear the output area
+                outputArea.setText("");
 
                 // Redirect standard output to the text area
                 System.setOut(new PrintStream(new TextAreaOutputStream(outputArea)));
 
+                Tomasulo.clearInstance(); // Clear the instance of the tomasulo simulator
                 Tomasulo tomasulo = Tomasulo.getInstance(addStationSize, mulStationSize, loadBufferSize, storeBufferSize, addLatency, subLatency, mulLatency, divLatency, loadLatency, storeLatency, SUBILatency, DADDLatency, DSUBLatency); // Create a new instance of the tomasulo simulator
                 tomasulo.init();
                 tomasulo.run();
-                runButton.setEnabled(false);
+//                runButton.setEnabled(false);
             } catch (NumberFormatException ex) {
                 JOptionPane.showMessageDialog(TomasuloGUI.this, "Please enter valid numbers for all fields.", "Input Error", JOptionPane.ERROR_MESSAGE);
             }

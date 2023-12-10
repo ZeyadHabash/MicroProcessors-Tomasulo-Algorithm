@@ -1,5 +1,4 @@
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Random;
 
 public class Tomasulo {
@@ -74,6 +73,10 @@ public class Tomasulo {
         return instance;
     }
 
+    public static void clearInstance() {
+        instance = null;
+    }
+
     // initialization function
     public void init() {
         // TODO: Initialize latencies through user input
@@ -86,7 +89,6 @@ public class Tomasulo {
             cache[i] = 1 + (double) Math.round((rand.nextDouble() * (100 - 1)) * 100) / 100; // rounding to 2 dp
 //            cache[i] = 0;
         }
-        cache[20] = 5;
 
         RegisterFile.initRegisterFile();
 
@@ -660,7 +662,7 @@ public class Tomasulo {
         System.out.println("Cache:");
         for (int i = 0; i < cache.length; i++) {
             cache[i] = Math.round(cache[i] * 100.0) / 100.0; // rounding to 2 dp
-            System.out.print(cache[i] + "\t|\t");
+            System.out.print("["+ i + "]: " + cache[i] + "\t|\t");
             if ((i + 1) % 32 == 0) {
                 System.out.println();
             }
