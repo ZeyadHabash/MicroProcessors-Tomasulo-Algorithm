@@ -19,6 +19,7 @@ public class TomasuloGUI extends JFrame {
     private JTextField SUBILatencyField = new JTextField(5);
     private JTextField DADDLatencyField = new JTextField(5);
 
+
     // Add more fields for other parameters
     private JTextField DSUBLatencyField = new JTextField(5);
     private JTextArea outputArea = new JTextArea(20, 50);
@@ -102,6 +103,21 @@ public class TomasuloGUI extends JFrame {
                 textAreaOutputStream.search(searchString);
             }
         });
+
+        // Set default values for the fields
+        addStationSizeField.setText("3");
+        mulStationSizeField.setText("2");
+        loadBufferSizeField.setText("3");
+        storeBufferSizeField.setText("3");
+        addLatencyField.setText("2");
+        subLatencyField.setText("4");
+        mulLatencyField.setText("10");
+        divLatencyField.setText("20");
+        loadLatencyField.setText("2");
+        storeLatencyField.setText("5");
+        SUBILatencyField.setText("1");
+        DADDLatencyField.setText("1");
+        DSUBLatencyField.setText("1");
 
         pack();
         setSize(getHeight() * 4, getHeight() * 2);
