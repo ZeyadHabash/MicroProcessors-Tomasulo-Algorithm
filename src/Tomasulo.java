@@ -1,4 +1,6 @@
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Random;
 
 public class Tomasulo {
     // make Tomasulo a singleton
@@ -6,9 +8,9 @@ public class Tomasulo {
     // Latencies of Integer Operations
     final int ADDILatency = 1;
     final int BNEZLatency = 1;
+    public double[] cache = new double[1024]; // Cache memory
     int currentCycle = 0; // Current clock cycle number
     int pc = 0; // Program counter
-    public double[] cache = new double[1024]; // Cache memory
     RegisterFile registerFile; // Register file
     ReservationStation addReservationStation;
     ReservationStation mulReservationStation;
@@ -79,9 +81,10 @@ public class Tomasulo {
         // TODO: Initialize RS and Buffer sizes through user input\
 
         // Initialize the cache
+        Random rand = new Random();
         for (int i = 0; i < 1024; i++) {
-//            cache[i] = i * 1.5;
-            cache[i] = 0;
+            cache[i] = 1 + (double) Math.round((rand.nextDouble() * (100 - 1)) * 100) / 100; // rounding to 2 dp
+//            cache[i] = 0;
         }
         cache[20] = 5;
 
@@ -656,7 +659,8 @@ public class Tomasulo {
 
         System.out.println("Cache:");
         for (int i = 0; i < cache.length; i++) {
-            System.out.print(cache[i] + "    ");
+            cache[i] = Math.round(cache[i] * 100.0) / 100.0; // rounding to 2 dp
+            System.out.print(cache[i] + "\t|\t");
             if ((i + 1) % 32 == 0) {
                 System.out.println();
             }

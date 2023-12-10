@@ -31,8 +31,6 @@ public class Register{
     }
 
     public void setValue(Double value) {
-        if (this.label.equals("R0"))
-            return;
         this.value = value;
     }
 
