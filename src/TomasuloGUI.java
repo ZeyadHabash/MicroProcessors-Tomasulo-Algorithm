@@ -5,6 +5,7 @@ import java.awt.event.ActionListener;
 import java.io.PrintStream;
 
 public class TomasuloGUI extends JFrame {
+    JButton runButton = new JButton("Run");
     private JTextField addStationSizeField = new JTextField(5);
     private JTextField mulStationSizeField = new JTextField(5);
     private JTextField loadBufferSizeField = new JTextField(5);
@@ -17,11 +18,11 @@ public class TomasuloGUI extends JFrame {
     private JTextField storeLatencyField = new JTextField(5);
     private JTextField SUBILatencyField = new JTextField(5);
     private JTextField DADDLatencyField = new JTextField(5);
-    private JTextField DSUBLatencyField = new JTextField(5);
 
     // Add more fields for other parameters
-
+    private JTextField DSUBLatencyField = new JTextField(5);
     private JTextArea outputArea = new JTextArea(20, 50);
+    private JTextField searchBar = new JTextField(20); // Search bar
 
     public TomasuloGUI() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -51,7 +52,6 @@ public class TomasuloGUI extends JFrame {
         inputPanel.add(sizePanel, BorderLayout.NORTH);
         inputPanel.add(latencyPanel, BorderLayout.CENTER);
 
-        JButton runButton = new JButton("Run");
         runButton.addActionListener(new RunAction());
         inputPanel.add(runButton, BorderLayout.SOUTH);
 
@@ -68,7 +68,40 @@ public class TomasuloGUI extends JFrame {
         gbc.fill = GridBagConstraints.BOTH;
         gbc.weightx = 1.0;
         gbc.weighty = 1.0;
-        add(new JScrollPane(outputArea), gbc);
+//        add(new JScrollPane(outputArea), gbc);
+
+
+        // Create a TextAreaOutputStream and redirect standard output to it
+        TextAreaOutputStream textAreaOutputStream = new TextAreaOutputStream(outputArea);
+        System.setOut(new PrintStream(textAreaOutputStream));
+
+        // Add the search bar to the top of the output area
+        JPanel outputPanel = new JPanel();
+        outputPanel.setLayout(new BoxLayout(outputPanel, BoxLayout.Y_AXIS));
+        JLabel searchLabel = new JLabel("Search:"); // Create a label
+        outputPanel.add(searchLabel); // Add the label to the panel
+        searchBar.setMaximumSize(new Dimension(200, searchBar.getPreferredSize().height)); // Set maximum width
+        searchBar.setAlignmentX(Component.CENTER_ALIGNMENT); // Center the search bar
+        outputPanel.add(searchBar);
+        outputPanel.add(Box.createRigidArea(new Dimension(0, 10))); // Add a vertical spacer
+        outputPanel.add(new JScrollPane(outputArea));
+        gbc.gridx = 1;
+        gbc.gridy = 0;
+        gbc.gridwidth = GridBagConstraints.REMAINDER;
+        gbc.gridheight = GridBagConstraints.REMAINDER;
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+        add(outputPanel, gbc);
+
+        // Add an action listener to the search bar
+        searchBar.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String searchString = searchBar.getText();
+                textAreaOutputStream.search(searchString);
+            }
+        });
 
         pack();
         setSize(getHeight() * 4, getHeight() * 2);
@@ -115,13 +148,7 @@ public class TomasuloGUI extends JFrame {
                 Tomasulo tomasulo = Tomasulo.getInstance(addStationSize, mulStationSize, loadBufferSize, storeBufferSize, addLatency, subLatency, mulLatency, divLatency, loadLatency, storeLatency, SUBILatency, DADDLatency, DSUBLatency); // Create a new instance of the tomasulo simulator
                 tomasulo.init();
                 tomasulo.run();
-                System.out.println("Cache:");
-                for (int i = 0; i < tomasulo.cache.length; i++) {
-                    System.out.print(tomasulo.cache[i] + "    ");
-                    if ((i + 1) % 32 == 0) {
-                        System.out.println();
-                    }
-                }
+                runButton.setEnabled(false);
             } catch (NumberFormatException ex) {
                 JOptionPane.showMessageDialog(TomasuloGUI.this, "Please enter valid numbers for all fields.", "Input Error", JOptionPane.ERROR_MESSAGE);
             }

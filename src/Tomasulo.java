@@ -616,7 +616,13 @@ public class Tomasulo {
 //        System.out.println("RS Stall: " + rsStall);
 //        System.out.println("PC: " + pc);
 
-        System.out.println("Cycle: " + currentCycle);
+        System.out.println("---------------------------------------------------------------------------------------------");
+        System.out.println("                                          Cycle:" + currentCycle + "                                          ");
+        System.out.println("---------------------------------------------------------------------------------------------");
+
+//        System.out.println("Cycle: " + currentCycle);
+
+        System.out.println("Stalling: " + (branchStall || rsStall));
 
         System.out.println();
 
@@ -645,9 +651,16 @@ public class Tomasulo {
         System.out.println();
 
         RegisterFile.printRegisterFile();
-        System.out.println("---------------------------------------------------------------------------------------------");
-        System.out.println("                                          :3                                                 ");
-        System.out.println("---------------------------------------------------------------------------------------------");
+
+        System.out.println();
+
+        System.out.println("Cache:");
+        for (int i = 0; i < cache.length; i++) {
+            System.out.print(cache[i] + "    ");
+            if ((i + 1) % 32 == 0) {
+                System.out.println();
+            }
+        }
     }
 
     public void printProgram() {
