@@ -8,7 +8,7 @@ public class Tomasulo {
     final int BNEZLatency = 1;
     int currentCycle = 0; // Current clock cycle number
     int pc = 0; // Program counter
-    double[] cache = new double[1024]; // Cache memory
+    public double[] cache = new double[1024]; // Cache memory
     RegisterFile registerFile; // Register file
     ReservationStation addReservationStation;
     ReservationStation mulReservationStation;
@@ -611,23 +611,43 @@ public class Tomasulo {
     public void print() {
 //        System.out.println("Program: ");
 //        printProgram();
-        System.out.println("Stalls:");
-        System.out.println("Branch Stall: " + branchStall);
-        System.out.println("RS Stall: " + rsStall);
+//        System.out.println("Stalls:");
+//        System.out.println("Branch Stall: " + branchStall);
+//        System.out.println("RS Stall: " + rsStall);
+//        System.out.println("PC: " + pc);
+
         System.out.println("Cycle: " + currentCycle);
-        System.out.println("PC: " + pc);
-//        RegisterFile.printRegisterFile();
+
+        System.out.println();
+
         System.out.println("Reservation Stations:");
         System.out.println("Add Reservation Station:");
         addReservationStation.print();
+
+        System.out.println();
+
         System.out.println("Mul Reservation Station:");
         mulReservationStation.print();
+
+        System.out.println();
+
         System.out.println("Load Buffer:");
         loadBuffer.print();
+
+        System.out.println();
+
         System.out.println("Store Buffer:");
         storeBuffer.print();
+
+        System.out.println();
+
         instructionQueue.print();
         System.out.println();
+
+        RegisterFile.printRegisterFile();
+        System.out.println("---------------------------------------------------------------------------------------------");
+        System.out.println("                                          :3                                                 ");
+        System.out.println("---------------------------------------------------------------------------------------------");
     }
 
     public void printProgram() {

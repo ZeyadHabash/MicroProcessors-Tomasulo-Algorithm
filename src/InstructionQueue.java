@@ -22,7 +22,7 @@ public class InstructionQueue {
 
     public void print() {
         System.out.println("Instruction Queue:");
-        System.out.println("Op\t\t\tDest\tj\tk\tIssue\tExec\t\tWriteRes");
+        System.out.println("Op\tDest\tj\tk\tIssue\tExec\tWriteRes");
         for (Instruction instruction : this.instructions) {
             System.out.println(instruction.toString());
         };

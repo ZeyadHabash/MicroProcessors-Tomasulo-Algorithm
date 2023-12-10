@@ -155,7 +155,7 @@ public class Instruction implements Cloneable {
 
     public String toString() {
         String res = "";
-        res += this.operation + "\t\t";
+        res += this.operation + "\t";
         if (this.destination != null) {
             res += this.destination.getLabel() + "\t";
         } else if (this.operation.equals("BNEZ")) {
@@ -171,18 +171,18 @@ public class Instruction implements Cloneable {
         if (this.operation.equals("S.D"))
             res += 0 + "\t";
         if (this.operand2 != null) {
-            res += this.operand2.getLabel() + "\t\t";
+            res += this.operand2.getLabel() + "\t";
         }
         if (this.operation.equals("L.D") || this.operation.equals("S.D") || this.operation.equals("ADDI") || this.operation.equals("SUBI")) {
-            res += this.immediateValue + "\t\t";
+            res += this.immediateValue + "\t";
         }
         if (this.issue >= 0) {
-            res += this.issue + "\t\t";
+            res += this.issue + "\t";
             if (this.executionStart >= 0) {
                 res += this.executionStart + "...";
                 Tomasulo tomasulo = Tomasulo.getInstance();
                 if (this.executionEnd >= executionStart && tomasulo.currentCycle >= this.executionEnd){
-                    res += this.executionEnd + "\t\t";
+                    res += this.executionEnd + "\t";
                     if (this.writeResult >= executionEnd)
                         res += this.writeResult + "\t";
                 }
